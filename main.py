@@ -1,25 +1,28 @@
-import os
-import asyncio
-from telegram import Bot
-from telegram.ext import ApplicationBuilder, ContextTypes
 import feedparser
+import logging
+from telegram import Bot
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
-RSS_URL = "https://www.bloomberg.com/feed/podcast/etf-report.xml"
+# تنظیمات ربات
+BOT_TOKEN = "7687238301:AAGXMxVR4EDlR284kM4SdDCoEtPZoIMVZb8"
+CHANNEL_ID = "-1002006111361"
+BLOOMBERG_RSS = "https://feeds.bloomberg.com/markets/news.rss"
 
-async def send_news():
-    bot = Bot(token=BOT_TOKEN)
-    feed = feedparser.parse(RSS_URL)
-    for entry in feed.entries[:3]:
-        title = entry.title
-        link = entry.link
-        published = entry.published
-        message = f"{title}\n{link}\n{published}"
-        await bot.send_message(chat_id=CHAT_ID, text=message)
+logging.basicConfig(level=logging.INFO)
+bot = Bot(token=BOT_TOKEN)
 
-async def main():
-    await send_news()
+def send_news():
+    feed = feedparser.parse(BLOOMBERG_RSS)
+    if not feed.entries:
+        logging.warning("No news entries found.")
+        return
+
+    messages = ["📰 Latest Bloomberg Headlines:"]
+    for entry in feed.entries[:8]:
+        messages.append(f"• {entry.title}\n{entry.link}")
+
+    text = "\n\n".join(messages)
+    bot.send_message(chat_id=CHANNEL_ID, text=text)
+    logging.info("✅ News sent to Telegram channel.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    send_news()
