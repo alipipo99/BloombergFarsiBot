@@ -1,9 +1,13 @@
 # BloombergFarsiBot - اخبار انگلیسی از بلومبرگ با پخش زنده
 
 import logging
-from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import feedparser
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+)
 
 # ---------------- تنظیمات اصلی ----------------
 BOT_TOKEN = "7687238301:AAGXMxVR4EDlR284kM4SdDCoEtPZoIMVZb8"
@@ -25,9 +29,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ---------------- دستور /live ----------------
 async def live(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        f"📺 Bloomberg Live:\n{LIVE_URL}"
-    )
+    await update.message.reply_text(f"📺 Bloomberg Live:\n{LIVE_URL}")
 
 # ---------------- دستور /news ----------------
 async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,10 +45,12 @@ async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=CHANNEL_ID, text="\n\n".join(messages))
 
 # ---------------- راه‌اندازی ربات ----------------
-if __name__ == '__main__':
+def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("live", live))
     app.add_handler(CommandHandler("news", news))
-    print("✅ BloombergFarsiBot is running...")
     app.run_polling()
+
+if __name__ == '__main__':
+    main()
