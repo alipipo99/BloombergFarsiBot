@@ -1,54 +1,65 @@
-import feedparser
+# BloombergFarsiBot - اخبار انگلیسی از بلومبرگ به صورت خودکار و دستی
+
 import logging
-import sys
-import asyncio
-from telegram import Update, Bot
+from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import feedparser
+import asyncio
+import os
 
-# تنظیمات ربات
-BOT_TOKEN = "7687238301:AAGXMxVR4EDlR284kM4SdDCoEtPZoIMVZb8"
-CHANNEL_ID = "-1002006111361"
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+CHANNEL_ID = os.environ.get("CHANNEL_ID")
 BLOOMBERG_FEED = "https://feeds.bloomberg.com/markets/news.rss"
+LIVE_URL = "https://www.youtube.com/@Bloomberg/live"
 
-logging.basicConfig(level=logging.INFO)
-bot = Bot(token=BOT_TOKEN)
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
-# حالت دستی (کامند /news)
-async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(await get_news_text())
-
-# حالت دستی (کامند /start)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Welcome to BloombergFarsiBot!\nUse /live to watch Bloomberg Live.\nUse /news to get latest Bloomberg headlines."
     )
 
-# تابع دریافت اخبار
-async def get_news_text():
+async def live(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"📺 Bloomberg Live:\n{LIVE_URL}")
+
+async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_news(context.bot)
+
+async def send_news(bot):
     feed = feedparser.parse(BLOOMBERG_FEED)
     if not feed.entries:
-        return "No news found from Bloomberg."
+        return
 
     messages = ["📰 Latest Bloomberg Headlines:"]
-    for entry in feed.entries[:8]:
+    for entry in feed.entries[:10]:
         messages.append(f"• {entry.title}\n{entry.link}")
-    return "\n\n".join(messages)
 
-# تابع ارسال اتوماتیک برای کران
-async def send_news_auto():
-    logging.info("📤 Sending Bloomberg news automatically...")
-    text = await get_news_text()
-    await bot.send_message(chat_id=CHANNEL_ID, text=text)
+    await bot.send_message(chat_id=CHANNEL_ID, text="\n\n".join(messages))
 
-# تابع اصلی
+async def auto_news(context: ContextTypes.DEFAULT_TYPE):
+    while True:
+        try:
+            await send_news(context.bot)
+        except Exception as e:
+            logging.error(f"Error sending news: {e}")
+        await asyncio.sleep(3 * 60 * 60)  # 3 hours
+
 async def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "cron":
-        await send_news_auto()
-    else:
-        app = ApplicationBuilder().token(BOT_TOKEN).build()
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("news", news))
-        await app.run_polling()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("live", live))
+    app.add_handler(CommandHandler("news", news))
+
+    # اجرای اتوماتیک همزمان
+    asyncio.create_task(auto_news(app.bot))
+
+    print("✅ BloombergFarsiBot is running...")
+    await app.run_polling()
 
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())
