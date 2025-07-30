@@ -3,7 +3,7 @@ from telegram import Bot
 
 # 🔐 توکن بات و آیدی عددی کانال
 BOT_TOKEN = "7687238301:AAGXMxVR4EDlR284kM4SdDCoEtPZoIMVZb8"
-CHANNEL_ID = -1002135689852 # اینو با آیدی عددی واقعی کانالت جایگزین کن
+CHANNEL_ID = -1002836287330 # اینو با آیدی عددی واقعی کانالت جایگزین کن
 
 async def send_message():
     bot = Bot(token=BOT_TOKEN)
