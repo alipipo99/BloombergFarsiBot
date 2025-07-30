@@ -10,4 +10,3 @@ services:
         value: 7687238301:AAGXMxVR4EDlR284kM4SdDCoEtPZoIMVZb8
     runtime: python
     pythonVersion: 3.10
-
